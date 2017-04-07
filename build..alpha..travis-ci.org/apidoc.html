@@ -1,0 +1,417 @@
+<div class="apidocDiv">
+<style>
+/*csslint
+*/
+.apidocDiv {
+    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.apidocDiv a[href] {
+    color: #33f;
+    font-weight: bold;
+    text-decoration: none;
+}
+.apidocDiv a[href]:hover {
+    text-decoration: underline;
+}
+.apidocCodeCommentSpan {
+    background: #bbf;
+    color: #000;
+    display: block;
+}
+.apidocCodeKeywordSpan {
+    color: #d00;
+    font-weight: bold;
+}
+.apidocCodePre {
+    background: #eef;
+    border: 1px solid;
+    color: #777;
+    padding: 5px;
+    white-space: pre-wrap;
+}
+.apidocFooterDiv {
+    margin-top: 20px;
+    text-align: center;
+}
+.apidocModuleLi {
+    margin-top: 10px;
+}
+.apidocSectionDiv {
+    border-top: 1px solid;
+    margin-top: 20px;
+}
+.apidocSignatureSpan {
+    color: #777;
+    font-weight: bold;
+}
+</style>
+<h1>api documentation for
+    <a
+
+        href="https://github.com/gavro/gulp-iconify"
+
+    >gulp-iconify (v0.6.0)</a>
+</h1>
+<h4>'A mystical CSS icon solution', grunticon-like build system.</h4>
+<div class="apidocSectionDiv"><a
+    href="#apidoc.tableOfContents"
+    id="apidoc.tableOfContents"
+><h1>table of contents</h1></a><ol>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.gulp-iconify">module gulp-iconify</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.gulp-iconify.custom_gulp_sass">
+            function <span class="apidocSignatureSpan">gulp-iconify.</span>custom_gulp_sass
+            <span class="apidocSignatureSpan">(options, sync)</span>
+            </a>
+
+        </li>
+
+    </ol></li>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.gulp-iconify.custom_gulp_sass">module gulp-iconify.custom_gulp_sass</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.gulp-iconify.custom_gulp_sass.custom_gulp_sass">
+            function <span class="apidocSignatureSpan">gulp-iconify.</span>custom_gulp_sass
+            <span class="apidocSignatureSpan">(options, sync)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.gulp-iconify.custom_gulp_sass.logError">
+            function <span class="apidocSignatureSpan">gulp-iconify.custom_gulp_sass.</span>logError
+            <span class="apidocSignatureSpan">(error)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.gulp-iconify.custom_gulp_sass.sync">
+            function <span class="apidocSignatureSpan">gulp-iconify.custom_gulp_sass.</span>sync
+            <span class="apidocSignatureSpan">(options)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <span class="apidocSignatureSpan">object <span class="apidocSignatureSpan">gulp-iconify.custom_gulp_sass.</span>compiler</span>
+
+        </li>
+
+    </ol></li>
+
+</ol></div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.gulp-iconify" id="apidoc.module.gulp-iconify">module gulp-iconify</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.gulp-iconify.custom_gulp_sass" id="apidoc.element.gulp-iconify.custom_gulp_sass">
+        function <span class="apidocSignatureSpan">gulp-iconify.</span>custom_gulp_sass
+        <span class="apidocSignatureSpan">(options, sync)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function gulpSass(options, sync) {
+    return through.obj(function(file, enc, cb) {
+        var opts,
+            filePush,
+            errorM,
+            callback,
+            result;
+
+        if (file.isNull()) {
+            return cb(null, file);
+        }
+        if (file.isStream()) {
+            return cb(new gutil.PluginError(PLUGIN_NAME, &#x27;Streaming not supported&#x27;));
+        }
+        if (!file.contents.length) {
+            file.path = gutil.replaceExtension(file.path, &#x27;.css&#x27;);
+            return cb(null, file);
+        }
+
+        opts = assign({}, options);
+        opts.data = file.contents.toString();
+
+        // Ensure `indentedSyntax` is true if a `.sass` file
+        if (path.extname(file.path) === &#x27;.sass&#x27;) {
+            opts.indentedSyntax = true;
+        }
+
+        // Ensure file&#x27;s parent directory in the include path
+        if (opts.includePaths) {
+            if (typeof opts.includePaths === &#x27;string&#x27;) {
+                opts.includePaths = [opts.includePaths];
+            }
+        }
+        else {
+            opts.includePaths = [];
+        }
+
+        opts.includePaths.unshift(path.dirname(file.path));
+
+        // Generate Source Maps if plugin source-map present
+        if (file.sourceMap) {
+            opts.sourceMap = file.path;
+            opts.omitSourceMapUrl = true;
+            opts.sourceMapContents = true;
+        }
+
+        //////////////////////////////
+        // Handles returning the file to the stream
+        //////////////////////////////
+        filePush = function filePush(sassObj) {
+            var sassMap,
+                sassMapFile,
+                sassFileSrc,
+                sassFileSrcPath,
+                sourceFileIndex,
+                filteredSources;
+
+            // Build Source Maps!
+            if (sassObj.map) {
+                // Transform map into JSON
+                sassMap = JSON.parse(sassObj.map.toString());
+                // Grab the stdout and transform it into stdin
+                sassMapFile = sassMap.file.replace(&#x27;stdout&#x27;, &#x27;stdin&#x27;);
+                // Grab the base file name that&#x27;s being worked on
+                sassFileSrc = file.relative;
+                // Grab the path portion of the file that&#x27;s being worked on
+                sassFileSrcPath = path.dirname(sassFileSrc);
+                if (sassFileSrcPath) {
+                    //Prepend the path to all files in the sources array except the file that&#x27;s being worked on
+                    for (sourceFileIndex = 0; sourceFileIndex &#x3c; sassMap.sources.length; sourceFileIndex++) {
+                        if (sourceFileIndex !== sassMap.sources.indexOf(sassMapFile)) {
+                            sassMap.sources[sourceFileIndex] = path.join(sassFileSrcPath, sassMap.sources[sourceFileIndex]);
+                        }
+                    }
+                }
+                // Remove &#x27;stdin&#x27; from souces and replace with filenames!
+                filteredSources = sassMap.sources.filter(function(src) {
+                    if (src.indexOf(&#x27;stdin&#x27;) === -1) {
+                        return src;
+                    }
+                });
+                sassMap.sources = filteredSources;
+                sassMap.sources.unshift(sassFileSrc);
+                // Replace the map file with the original file name (but new extension)
+                sassMap.file = gutil.replaceExtension(sassFileSrc, &#x27;.css&#x27;);
+                // Apply the map
+                applySourceMap(file, sassMap);
+            }
+
+            file.contents = sassObj.css;
+            file.path = gutil.replaceExtension(file.path, &#x27;.css&#x27;);
+
+            var parts = file.path.split(&#x27;/&#x27;);
+            if(parts.length) {
+                parts[parts.length - 1] = parts[parts.length - 1].replace(/^_+/, &#x27;&#x27;);
+                file.path = parts.join(&#x27;/&#x27;);
+            }
+
+            cb(null, file);
+        };
+
+        //////////////////////////////
+        // Handles error message
+        //////////////////////////////
+        errorM = function errorM(error) {
+            var relativePath = &#x27;&#x27;,
+                filePath = error.file === &#x27;stdin&#x27; ? file.path : error.fil ...</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+</div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.gulp-iconify.custom_gulp_sass" id="apidoc.module.gulp-iconify.custom_gulp_sass">module gulp-iconify.custom_gulp_sass</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.gulp-iconify.custom_gulp_sass.custom_gulp_sass" id="apidoc.element.gulp-iconify.custom_gulp_sass.custom_gulp_sass">
+        function <span class="apidocSignatureSpan">gulp-iconify.</span>custom_gulp_sass
+        <span class="apidocSignatureSpan">(options, sync)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function gulpSass(options, sync) {
+    return through.obj(function(file, enc, cb) {
+        var opts,
+            filePush,
+            errorM,
+            callback,
+            result;
+
+        if (file.isNull()) {
+            return cb(null, file);
+        }
+        if (file.isStream()) {
+            return cb(new gutil.PluginError(PLUGIN_NAME, &#x27;Streaming not supported&#x27;));
+        }
+        if (!file.contents.length) {
+            file.path = gutil.replaceExtension(file.path, &#x27;.css&#x27;);
+            return cb(null, file);
+        }
+
+        opts = assign({}, options);
+        opts.data = file.contents.toString();
+
+        // Ensure `indentedSyntax` is true if a `.sass` file
+        if (path.extname(file.path) === &#x27;.sass&#x27;) {
+            opts.indentedSyntax = true;
+        }
+
+        // Ensure file&#x27;s parent directory in the include path
+        if (opts.includePaths) {
+            if (typeof opts.includePaths === &#x27;string&#x27;) {
+                opts.includePaths = [opts.includePaths];
+            }
+        }
+        else {
+            opts.includePaths = [];
+        }
+
+        opts.includePaths.unshift(path.dirname(file.path));
+
+        // Generate Source Maps if plugin source-map present
+        if (file.sourceMap) {
+            opts.sourceMap = file.path;
+            opts.omitSourceMapUrl = true;
+            opts.sourceMapContents = true;
+        }
+
+        //////////////////////////////
+        // Handles returning the file to the stream
+        //////////////////////////////
+        filePush = function filePush(sassObj) {
+            var sassMap,
+                sassMapFile,
+                sassFileSrc,
+                sassFileSrcPath,
+                sourceFileIndex,
+                filteredSources;
+
+            // Build Source Maps!
+            if (sassObj.map) {
+                // Transform map into JSON
+                sassMap = JSON.parse(sassObj.map.toString());
+                // Grab the stdout and transform it into stdin
+                sassMapFile = sassMap.file.replace(&#x27;stdout&#x27;, &#x27;stdin&#x27;);
+                // Grab the base file name that&#x27;s being worked on
+                sassFileSrc = file.relative;
+                // Grab the path portion of the file that&#x27;s being worked on
+                sassFileSrcPath = path.dirname(sassFileSrc);
+                if (sassFileSrcPath) {
+                    //Prepend the path to all files in the sources array except the file that&#x27;s being worked on
+                    for (sourceFileIndex = 0; sourceFileIndex &#x3c; sassMap.sources.length; sourceFileIndex++) {
+                        if (sourceFileIndex !== sassMap.sources.indexOf(sassMapFile)) {
+                            sassMap.sources[sourceFileIndex] = path.join(sassFileSrcPath, sassMap.sources[sourceFileIndex]);
+                        }
+                    }
+                }
+                // Remove &#x27;stdin&#x27; from souces and replace with filenames!
+                filteredSources = sassMap.sources.filter(function(src) {
+                    if (src.indexOf(&#x27;stdin&#x27;) === -1) {
+                        return src;
+                    }
+                });
+                sassMap.sources = filteredSources;
+                sassMap.sources.unshift(sassFileSrc);
+                // Replace the map file with the original file name (but new extension)
+                sassMap.file = gutil.replaceExtension(sassFileSrc, &#x27;.css&#x27;);
+                // Apply the map
+                applySourceMap(file, sassMap);
+            }
+
+            file.contents = sassObj.css;
+            file.path = gutil.replaceExtension(file.path, &#x27;.css&#x27;);
+
+            var parts = file.path.split(&#x27;/&#x27;);
+            if(parts.length) {
+                parts[parts.length - 1] = parts[parts.length - 1].replace(/^_+/, &#x27;&#x27;);
+                file.path = parts.join(&#x27;/&#x27;);
+            }
+
+            cb(null, file);
+        };
+
+        //////////////////////////////
+        // Handles error message
+        //////////////////////////////
+        errorM = function errorM(error) {
+            var relativePath = &#x27;&#x27;,
+                filePath = error.file === &#x27;stdin&#x27; ? file.path : error.fil ...</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.gulp-iconify.custom_gulp_sass.logError" id="apidoc.element.gulp-iconify.custom_gulp_sass.logError">
+        function <span class="apidocSignatureSpan">gulp-iconify.custom_gulp_sass.</span>logError
+        <span class="apidocSignatureSpan">(error)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function logError(error) {
+    var message = new gutil.PluginError(&#x27;sass&#x27;, error.messageFormatted).toString();
+    process.stderr.write(message + &#x27;\n&#x27;);
+    this.emit(&#x27;end&#x27;);
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.gulp-iconify.custom_gulp_sass.sync" id="apidoc.element.gulp-iconify.custom_gulp_sass.sync">
+        function <span class="apidocSignatureSpan">gulp-iconify.custom_gulp_sass.</span>sync
+        <span class="apidocSignatureSpan">(options)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function sync(options) {
+    return gulpSass(options, true);
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+    return stream;
+});
+
+gulp.task(&#x27;iconify&#x27;, [&#x27;iconify-convert&#x27;, &#x27;iconify-fallback&#x27;, &#x27;iconify-sass&#x27;], function() {
+    // remove SCSS folder/files if SCSS output is disabled
+    if(opts.scssDisabled) {
+        if(opts.scssRemoveDir) {
+            del.<span class="apidocCodeKeywordSpan">sync</span>([opts.scssOutput]);
+        } else {
+            del.sync([opts.scssOutput+&#x27;/_icons.*.scss&#x27;]);
+        }
+    }
+});
+
+gulp.start(&#x27;iconify&#x27;);
+...</pre></li>
+    </ul>
+
+
+
+
+</div>
+
+<div class="apidocFooterDiv">
+    [ this document was created with
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>
+    ]
+</div>
+</div>
