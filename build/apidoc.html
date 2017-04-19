@@ -63,6 +63,15 @@
 
         <li>
 
+            <a class="apidocElementLiA" href="#apidoc.element.gulp-iconify.gulp-iconify">
+            function <span class="apidocSignatureSpan"></span>gulp-iconify
+            <span class="apidocSignatureSpan">(opts)</span>
+            </a>
+
+        </li>
+
+        <li>
+
             <a class="apidocElementLiA" href="#apidoc.element.gulp-iconify.custom_gulp_sass">
             function <span class="apidocSignatureSpan">gulp-iconify.</span>custom_gulp_sass
             <span class="apidocSignatureSpan">(options, sync)</span>
@@ -113,6 +122,94 @@
 
 <div class="apidocSectionDiv">
 <h1><a href="#apidoc.module.gulp-iconify" id="apidoc.module.gulp-iconify">module gulp-iconify</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.gulp-iconify.gulp-iconify" id="apidoc.element.gulp-iconify.gulp-iconify">
+        function <span class="apidocSignatureSpan"></span>gulp-iconify
+        <span class="apidocSignatureSpan">(opts)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">gulp-iconify = function (opts) {
+    opts = opts || {};
+    opts.scssDisabled = false;
+
+    getErrors(opts);
+    setFallbacks(opts);
+
+    gulp.task(&#x27;iconify-clean&#x27;, function(cb) {
+        del([opts.scssOutput+&#x27;/*icons.*.scss&#x27;, opts.cssOutput+&#x27;/*icons.*.css&#x27;, opts.pngOutput+&#x27;/*.png&#x27;], cb);
+    });
+
+    gulp.task(&#x27;iconify-convert&#x27;, [&#x27;iconify-clean&#x27;], function() {
+        gulp.src(opts.src)
+            .pipe(iconify({
+                styleTemplate: opts.styleTemplate,
+                styleName: &#x27;_icons.svg.scss&#x27;,
+                svgoOptions: opts.svgoOptions,
+                defaultWidth: opts.defaultWidth,
+                defaultHeight: opts.defaultHeight
+            }))
+            .pipe(gulp.dest(opts.scssOutput));
+
+        var stream = gulp.src(opts.src)
+            .pipe(svg2png(opts.svg2pngOptions.options, opts.svg2pngOptions.verbose, opts.svg2pngOptions.concurrency))
+            .pipe(gulp.dest(opts.pngOutput))
+            .pipe(iconify({
+                styleTemplate: opts.styleTemplate,
+                styleName: &#x27;_icons.png.scss&#x27;,
+                defaultWidth: opts.defaultWidth,
+                defaultHeight: opts.defaultHeight
+            }))
+            .pipe(gulp.dest(opts.scssOutput));
+
+        return stream;
+    });
+
+    gulp.task(&#x27;iconify-fallback&#x27;, [&#x27;iconify-clean&#x27;, &#x27;iconify-convert&#x27;], function() {
+        var stream = gulp.src(opts.pngOutput+&#x27;/*.png&#x27;)
+            .pipe(iconify({
+                styleTemplate: opts.styleTemplate,
+                styleName: &#x27;_icons.fallback.scss&#x27;,
+                noConvert: true,
+                cssOutputTarget: opts.cssOutput,
+                pngOutputTarget: opts.pngOutput
+            }))
+            .pipe(gulp.dest(opts.scssOutput));
+
+        return stream;
+    });
+
+    gulp.task(&#x27;iconify-sass&#x27;, [&#x27;iconify-convert&#x27;, &#x27;iconify-fallback&#x27;], function() {
+        if (opts.cssDisabled) {
+            return false;
+        }
+        var stream = gulp.src(opts.scssOutput+&#x27;/_icons.*.scss&#x27;)
+            .pipe(sass({
+                outputStyle: &#x27;compressed&#x27;
+            }))
+            .pipe(gulp.dest(opts.cssOutput));
+
+        return stream;
+    });
+
+    gulp.task(&#x27;iconify&#x27;, [&#x27;iconify-convert&#x27;, &#x27;iconify-fallback&#x27;, &#x27;iconify-sass&#x27;], function() {
+        // remove SCSS folder/files if SCSS output is disabled
+        if(opts.scssDisabled) {
+            if(opts.scssRemoveDir) {
+                del.sync([opts.scssOutput]);
+            } else {
+                del.sync([opts.scssOutput+&#x27;/_icons.*.scss&#x27;]);
+            }
+        }
+    });
+
+    gulp.start(&#x27;iconify&#x27;);
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
 
 
     <h2>
